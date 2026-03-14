@@ -1,3 +1,6 @@
+# 程序运行时生成的数据文件，不提交
+expense_tracker/expenses.json
+
 # Python
 __pycache__/
 *.py[cod]
