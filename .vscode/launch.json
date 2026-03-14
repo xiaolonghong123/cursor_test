@@ -15,7 +15,8 @@
       "request": "launch",
       "program": "${workspaceFolder}/expense_tracker/main.py",
       //"args": ["add", "28.5", "餐饮", "--desc", "午饭"],
-      "args": ["list"],
+      // "args": ["list"],
+       "args": ["export"],
       // "args": ["summary"],
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}/expense_tracker"

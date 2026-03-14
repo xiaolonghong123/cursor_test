@@ -16,6 +16,8 @@ import typer
 # rich：终端美化输出，支持颜色、表格等
 from rich.console import Console
 from rich.table import Table
+# pandas：表格数据处理，to_csv 导出 CSV 方便且格式统一
+import pandas as pd
 
 # ---------- 全局对象 ----------
 # 创建一个“控制台”对象，后面用 console.print() 输出带样式的文字
@@ -24,6 +26,8 @@ console = Console()
 app = typer.Typer(help="建丰的个人消费追踪工具 🚀")
 # 数据文件路径。Path("expenses.json") 表示当前目录下的 expenses.json
 DATA_FILE = Path("expenses.json")
+# 导出 CSV 的默认文件名
+EXPORT_CSV = Path("expenses.csv")
 
 
 # ---------- 从文件加载所有消费记录 ----------
@@ -139,6 +143,38 @@ def summary():
     console.print(table)
     # sum(可迭代对象) 求和；.values() 是所有金额
     console.print(f"总计: [bold red]{sum(by_category.values()):.2f}[/bold red] 元")
+
+
+# ---------- 子命令：删除一条记录 ----------
+@app.command()
+def delete(
+    record_id: int = typer.Argument(..., help="要删除的记录 ID（例如 3）"),
+):
+    """根据 ID 删除一条消费记录"""
+    expenses = load_expenses()
+    # 查找是否存在该 ID 的记录
+    found = next((e for e in expenses if e.id == record_id), None)
+    if found is None:
+        console.print("[yellow]ID 不存在～[/yellow]")
+        return
+    expenses.remove(found)
+    save_expenses(expenses)
+    console.print(f"[green]已删除 ID {record_id} 的记录～[/green]")
+
+# ---------- 子命令：导出为 CSV ----------
+@app.command()
+def export():
+    """把所有消费记录导出到 expenses.csv"""
+    expenses = load_expenses()
+    if not expenses:
+        console.print("[yellow]还没有任何记录～[/yellow]")
+        return
+    # 用 asdict 转成字典列表，pandas 可直接从 list of dict 构造 DataFrame
+    rows = [asdict(e) for e in expenses]
+    df = pd.DataFrame(rows, columns=["id", "amount", "category", "description", "date"])
+    # to_csv：index=False 不写行号列，encoding 保证中文正常，可读性更好
+    df.to_csv(EXPORT_CSV, index=False, encoding="utf-8-sig")
+    console.print("[green]已导出到 expenses.csv[/green]")
 
 
 # ---------- 程序入口 ----------
